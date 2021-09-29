@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="Bov BI - Desafios Práticos">
+    <meta name="author" content="Fernando Maia da Mota">
+    <link rel="shortcut icon" href="../img/favicon.ico" />
+
+    <title>Bov BI - Documentação</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../../css/desafios_praticos.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+    <div id="">
+        <div class="container">
+
+            <div class="header clearfix">
+                <h3 class="text-muted">Bov BI - Documentação</h3>
+            </div>
+
+
+            <div class="row">
+                <h2>Column with lines Chart</h2>
+
+                <div class="col-md-12">
+                    <p>Expected dataset</p>
+                    <pre>
+{
+    "metadata": [{
+        "colIndex": 0,
+        "colType": "String",
+        "colName": "Territory"
+    }, {
+        "colIndex": 1,
+        "colType": "Numeric",
+        "colName": "2003"
+    }, {
+        "colIndex": 2,
+        "colType": "Numeric",
+        "colName": "2004"
+    }, {
+        "colIndex": 3,
+        "colType": "Numeric",
+        "colName": "2005"
+    }],
+    "resultset": [
+        ["APAC", 3528  , 5938 , 3411 ],
+        ["EMEA", 16711 , 23630 , 9237 ],
+        ["Japan", 2851 , 1692 , 380],
+        ["NA", 13348 , 18157 , 6447 ]
+        ]
+
+};
+            </pre>
+                </div>
+
+                <div class="col-md-12">
+                    <p>Function</p>
+                    <pre>
+function bar(chartOptions, result) {
+    var obj = this;
+    var series = [];
+    var categories = [];
+    var avgArray = [];
+    var serie = {
+        name : 'Quantity',
+        data : []
+    };
+
+    $.each(result.resultset, function( index, value ) {
+        var soma=0;
+        var countSoma=0;
+        var ano = value[0];
+        categories.push(ano);
+        
+        $.each(value, function( i, v ) {
+            if(i>0 && v > 0){
+                soma += v;
+                countSoma++;
+            }
+        });
+        
+        avgArray.push(soma / countSoma);
+    });
+
+    drillDataLen = result.resultset[0].length;
+    for(var columnIdx=1; columnIdx< result.resultset[0].length; columnIdx++){
+        var serieName = result.metadata[columnIdx].colName.split('/')[0];
+        brightness = 0.2 - (columnIdx / drillDataLen) ;
+        var serie = {
+            name : serieName,
+            data: [],
+            color:  Highcharts.Color("#90ed7d").brighten(brightness).get()     
+        };
+        
+        $.each(result.resultset, function( i, v ) {
+            serie.data.push(v[columnIdx]);
+        });
+        
+        series.push(serie);
+    };
+
+    //push avg values
+    var serie = {
+        name : 'Média',
+        type:'line',
+        data: avgArray,
+        color:'#000'
+    };
+    series.push(serie);
+    
+    componentHighChartOptions = {
+        chart: {
+            type: 'column',
+            height: 400,
+            zoomType: 'xy'
+        },
+        title: {
+            text: 'Comparative Quantity per Territory by Years'
+        },
+        subtitle: {
+            enabled: false
+        },
+        xAxis: {
+            categories: categories,
+            labels: {
+                enabled: true,
+                align: 'right'
+            }
+        },
+        yAxis: {
+            title: {
+                enabled: true,
+                text: ''
+            },
+            labels: {
+                enabled: true,
+                formatter: function () {
+                    return this.value;
+                }
+            }
+        },
+        legend: {
+            enabled : true
+        },
+        exporting: {
+            chartOptions: {
+                credits: {
+                    enabled: true,
+                    text: 'Samples'
+                }
+            }
+        },
+        credits : {
+            enabled: false 
+        },
+        tooltip: {
+            useHTML: true,
+            formatter: function () {
+                return '< b>' +this.x +'&lt/b>&ltbr/>'+
+                this.series.name+ ': &ltb>'+this.y+'&lt/b>&ltbr/>';
+            }
+        },
+        plotOptions: {
+            line: {
+                dataLabels: {
+                    enabled: true,
+                    color : '#000',
+                    formatter: function () {
+                        //console.log(this);
+                        return this.y;
+                    },
+                    style:{
+                        fontSize:11,
+                        fontWeight: 'bolder'
+                    }
+                }
+            },
+            column: {
+                dataLabels: {
+                    enabled: false, 
+                    color: '#000',
+                    style: {
+                        //fontSize:11,
+                        fontWeight: 'bolder'
+                    },
+                    formatter: function() {return this.y;},
+                    inside: true,
+                    rotation: 270
+                },
+                pointPadding: 0.1,
+                groupPadding: 0.1,
+            }
+        },
+        series: series
+    }   
+    
+    // Create the chart
+    $('#'+this.htmlObject).highcharts(
+        Highcharts.merge(highChartDefaultOptions, componentHighChartOptions)
+    );
+                
+} 
+
+        </pre>
+                </div>
+
+                <div id="function" class="col-md-12">
+                    <p>Chart render</p>
+
+                    <pre><div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div></pre>
+                </div>
+
+                <div class="col-md-12">
+                    <p>MDX Query</p>
+                    <h7>Sample MDX query using StellWheels</h7>
+                    <pre>  
+WITH
+SET [~COLUMNS] AS
+    {[Time].[Years].Members}
+
+SET [~ROWS] AS
+    {[Markets].[Territory].Members}
+
+SELECT
+NON EMPTY CrossJoin([~COLUMNS], {[Measures].[Quantity]}) ON COLUMNS,
+NON EMPTY [~ROWS] ON ROWS
+FROM [SteelWheelsSales]
+
+            </pre>
+
+
+
+                    <p>
+                </div>
+
+            </div>
+            <hr>
+            <p>
+                <a href="../../menu/components.html" class="btn btn-default">
+                    < Voltar</a>
+        </div>
+        <!-- /container -->
+
+    </div>
+    <!-- /wrap -->
+
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="../..//js/Highcharts/code/highcharts.js"></script>
+    <script src="../..//js/Highcharts/code/highcharts-more.js"></script>
+    <script src="../..//js/Highcharts/code/modules/exporting.js"></script>
+    <script src="column_line.js"></script>
+</body>
+
+</html>

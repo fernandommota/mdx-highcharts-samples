@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="Bov BI - Desafios Práticos">
+    <meta name="author" content="Fernando Maia da Mota">
+    <link rel="shortcut icon" href="../img/favicon.ico"/>
+
+    <title>Bov BI - Documentação</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../../css/desafios_praticos.css" rel="stylesheet">
+
+    
+  </head>
+
+  <body>
+    <div id="">
+      <div class="container">
+
+        <div class="header clearfix">
+          <h3 class="text-muted">Bov BI - Documentação</h3>
+        </div>
+
+        <div class="row">
+          <h2>Line Chart with area</h2>
+
+          <div class="col-md-12">
+            <p>Expected dataset</p>
+            <pre>
+{
+    "metadata": [{
+        "colIndex": 0,
+        "colType": "String",
+        "colName": "Country"
+    }, {
+        "colIndex": 1,
+        "colType": "Numeric",
+        "colName": "2003"
+    }, {
+        "colIndex": 2,
+        "colType": "Numeric",
+        "colName": "2004"
+    }, {
+        "colIndex": 4,
+        "colType": "Numeric",
+        "colName": "2005"
+    }],
+    "resultset": [
+        ["APAC", 3529 , 5938 , 3411 ],
+        ["EMEA", 16711 , 23630 , 9237],
+        ["Japan", 2851 , 1692 , 380],
+        ["NA", 13348 , 18157 , 6447]
+        ]
+
+}
+            </pre>
+          </div>
+
+          <div class="col-md-12">
+            <p>Function</p>
+            <pre>
+        
+function line(chartOptions, result) {
+    var series = [];
+    var categories = []
+
+    for(var i = 1; i < result.metadata.length; i++){
+        var serieName = result.metadata[i].colName;
+        var modelSerie =  {
+            name: serieName,
+            data: []
+        };
+        series.push(modelSerie);
+    };
+
+    $.each(result.resultset, function( index, value ) {
+            var mes = value[0];
+            categories.push(mes);
+            
+            for(var i=1; i < value.length; i++){
+                var quantidade = value[i];
+                series[i-1].data.push(quantidade);
+            }  
+    });
+
+        componentHighChartOptions = {
+            plotOptions: {
+                area: {
+                    stacking: 'normal',
+                    lineColor: '#666666',
+                    lineWidth: 1,
+                    reversedStacks: false,
+                    marker: {
+                        lineWidth: 1,
+                        lineColor: '#666666'
+                    },
+                dataLabels: {
+                    enabled: true,
+                    style: {
+                        fontSize: '10' 
+                    },
+                },
+                },
+                series: {
+                    cursor: 'pointer',
+                    point: {
+                        events: {
+                            click: function () {
+                                //Set drill operations in this property   
+                            }
+                        }
+                    }
+                }
+            },
+            chart: {
+                type: 'area'
+            },
+            title: {
+                text: 'Sales per country by year',
+                x: -20 //center
+            },
+            subtitle: {
+                text: '',
+                x: -20
+            },
+            xAxis: {
+                categories: categories,
+            },
+            yAxis: {
+                title: {
+                    text: 'Quantity'
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                formatter: function(){
+                    return  this.x+ '< br>' +
+                            '&ltb>'+this.series.name+ '&lt/b> : ' +this.y+ '&lt;br>'
+                } 
+            },
+            /*tooltip: {
+                valueSuffix: ''
+            },*/
+            legend: {
+                layout: 'horizontal',
+                align: 'center',
+                hozizontal: 'bottom',
+                borderWidth: 0
+            },
+            series: series,
+            credits: {
+                text: 'Bov BI - Business Intelligence para seu Agronegócio'
+            }
+        }   
+        
+        // Create the chart
+        $('#'+this.htmlObject).highcharts(
+            Highcharts.merge(highChartDefaultOptions, componentHighChartOptions)
+        );
+                
+} 
+            </pre>
+          </div>
+          
+          <div class="col-md-12">
+            <p>Chart render</p>
+          
+            <pre><div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div></pre>
+          </div>
+
+              <div class="col-md-12">
+                    <p>MDX Query</p>
+                    <h7>Sample MDX query using StellWheels</h7>
+                    <pre>  
+WITH
+SET [~COLUMNS] AS
+    {[Markets].[Territory].Members}
+SET [~ROWS] AS
+    {[Time].[Years].Members}
+SELECT
+NON EMPTY CrossJoin([~COLUMNS], {[Measures].[Quantity]}) ON COLUMNS,
+NON EMPTY [~ROWS] ON ROWS
+FROM [SteelWheelsSales]
+                    </pre>                    
+                </div>
+          
+        </div>
+        <hr>
+      <p><a href="../../menu/components.html" class="btn btn-default">< Voltar</a>        
+      </div>
+    <!-- /container -->
+
+    </div>
+    <!-- /wrap -->
+
+
+    <script
+  src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>  
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="../..//js/Highcharts/code/highcharts.js"></script>
+    <script src="../..//js/Highcharts/code/modules/exporting.js"></script>
+    <script src="line_chart_with_area.js"></script>
+  </body>
+</html>

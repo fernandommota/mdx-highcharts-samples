@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="Bov BI - Desafios Práticos">
+    <meta name="author" content="Fernando Maia da Mota">
+    <link rel="shortcut icon" href="../img/favicon.ico"/>
+
+    <title>Bov BI - Documentação</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../../css/desafios_praticos.css" rel="stylesheet">
+
+    
+  </head>
+
+  <body>
+    <div id="">
+      <div class="container">
+
+        <div class="header clearfix">
+          <h3 class="text-muted">Bov BI - Documentação</h3>
+        </div>
+
+        <div class="row">
+          <h2>Column Chart</h2>
+
+          <div class="col-md-12">
+            <p>Expected dataset</p>
+            <pre>
+{
+    "metadata": [{
+        "colIndex": 0,
+        "colType": "String",
+        "colName": "Territory"
+    }, {
+        "colIndex": 1,
+        "colType": "Numeric",
+        "colName": "Quantity"
+    }],
+    "resultset": [
+        ["APAC", 12878 ],
+        ["EMEA", 49578 ],
+        ["Japan", 4923],
+        ["NA", 37952]
+        ]
+
+}
+            </pre>
+          </div>
+
+          <div class="col-md-12">
+            <p>Function</p>
+            <pre>
+function column(chartOptions, result) {
+    var categories = [];
+    var series = [];
+    var data = [];
+    var percent = 0;
+
+    $.each(result.resultset, function( index, value ) {
+        categories.push(value[0]);
+        data.push({y:value[1]}); 
+        percent+=value[1];
+    }); 
+
+    componentHighChartOptions = {        
+        chart: {
+            type: 'column',
+            height: 350,
+            events: {
+                click: function (result) {
+                    //Set drill operations in this property
+                }
+            }
+        },
+        title: {
+            text: 'Quantity of Sales by Territoy'
+        },
+        xAxis: {
+            categories: categories,
+            crosshair: true
+        },
+        yAxis: {
+            title: {
+                text: 'Quantity of Salesw'
+            }
+        },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            series: {
+                borderWidth: 0,
+            
+                events: {
+                click: function (result) {
+                    }
+                }
+            }
+        },
+        tooltip: {
+            headerFormat: '&ltspan style="font-size:11px">Territoy:&lt/span> {point.x}< br>',
+            pointFormat: '&ltspan ">Quantity:&lt/span> < b>{point.y:.0f}< /b>'
+        },
+        series: [{
+            name: 'Territory',
+            data: data
+        }]
+        }   
+    
+    // Create the chart
+    $('#'+this.htmlObject).highcharts(
+        Highcharts.merge(highChartDefaultOptions, componentHighChartOptions)
+    );
+} 
+            </pre>
+          </div>
+          
+          <div class="col-md-12">
+            <p>Chart render</p>
+          
+            <pre><div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div></pre>
+          </div>
+
+            <div class="col-md-12">
+            <p>MDX Query</p>
+            <h7>Sample MDX query using StellWheels</h7>
+                <pre>  
+WITH
+SET [~ROWS] AS
+    {[Markets].[Territory].Members}
+SELECT
+NON EMPTY {[Measures].[Quantity]} ON COLUMNS,
+NON EMPTY [~ROWS] ON ROWS
+FROM [SteelWheelsSales]
+                </pre>                    
+            </div>
+          
+        </div>
+        <hr>
+      <p><a href="../../menu/components.html" class="btn btn-default">< Voltar</a>       
+      </div>
+    <!-- /container -->
+
+    </div>
+    <!-- /wrap -->
+
+
+    <script
+  src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>  
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="../..//js/Highcharts/code/highcharts.js"></script>
+    <script src="../..//js/Highcharts/code/modules/exporting.js"></script>
+    <script src="column_chart.js"></script>
+  </body>
+</html>

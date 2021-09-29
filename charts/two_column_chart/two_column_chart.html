@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="Bov BI - Desafios Práticos">
+    <meta name="author" content="Fernando Maia da Mota">
+    <link rel="shortcut icon" href="../img/favicon.ico" />
+
+    <title>Bov BI - Documentação</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../../css/desafios_praticos.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+    <div id="">
+        <div class="container">
+
+            <div class="header clearfix">
+                <h3 class="text-muted">Bov BI - Documentação</h3>
+            </div>
+
+            <div class="row">
+                <h2>Two Column Chart</h2>
+
+                <div class="col-md-12">
+                    <p>Expected dataset</p>
+                    <pre>
+    {
+        "metadata": [{
+        "colIndex": 0,
+        "colType": "String",
+        "colName": "Estado"
+    }, {
+        "colIndex": 1,
+        "colType": "Numeric",
+        "colName": "Quantidade Abates"
+    }],
+        "resultset": [
+        ["Alagoas", "Todos" , 36 , 30 , 46 ],
+        ["Ceará", "Todos" , 14 , 26 , 45 ],
+        ["Espírito Santo", "Todos" , 15 , 30 , 25],
+        ["Goiás", "Todos" , 27 , 12 , 30 ],
+        ["Maranhão", "Todos" , 34 , 50 , 20],
+        ["Mato Grosso", "Todos" , 23 , 35 , 13 ],
+        ["Mato Grosso do Sul", "Todos" , 34 , 8 , 13],
+        ["Pará", "Todos" , 25 , 23 , 42],
+        ["Pernambuco", "Todos" , 16 , 18 , 23],
+        ["Rio Grande do Sul", "Todos" , 37 , 30 , 78  ],
+        ["Rondônia", "Todos" ,  26 , 87 , 71],
+        ["Santa Catarina", "Todos" , 26 , 7 , 13],
+        ["São Paulo", "Todos" , 25 , 66 , 36 ], 
+        ["Sergipe", "Todos" , 36 , 33 , 66],
+        ["Tocantins" , "Todos" , 31 , 13 , 11 ]
+    ]
+    };
+            </pre>
+                </div>
+
+                <div class="col-md-12">
+                    <p>Function</p>
+                    <pre>
+        
+    function column(chartOptions, result) {
+        
+        var series = [];
+        var drilldownSeries = [];
+
+        console.log(result.resultset);
+
+        //Get the serieName 
+        $.each(result.metadata, function( index, value ) {
+        
+            if(value.colType === 'Integer' || value.colType === 'Numeric'){
+                series.push({
+                    data:[],
+                    name:value.colName.split('/')[0]
+                }); 
+            }
+        });
+
+        var drilldownSerieIdxArray=[];
+        $.each(result.resultset, function( rowIndex, rowValue ) {
+            
+            var serieName = rowValue[0];
+            var level = rowValue[1];
+            var values = rowValue.splice(2,3);
+            
+            $.each(values, function( colIndex, value ) {
+                if(level === 'Todos'){
+                    //Create the serieModel
+                    var serieModel = {
+                        name: serieName,
+                        y: value,
+                        drilldown: 'drilldown-'+rowIndex+'-'+colIndex //Create the index for drilldow
+                    }
+                    //Push the serieModel for each series
+                    series[colIndex].data.push(serieModel);
+                    //Push the drilldowSeries
+                    drilldownSeries.push({
+                        id : 'drilldown-'+rowIndex+'-'+colIndex,
+                        name: serieName,
+                        allowPointDrilldown: true,
+                        data: []
+                    });
+                    //Get the index for each drildownSeries elements
+                    indexOfNewElement = drilldownSeries.length - 1;
+                    drilldownSerieIdxArray[colIndex] = indexOfNewElement;
+                }else{
+                    index = drilldownSerieIdxArray[colIndex];
+                    
+                    //Compare to push only with value exists
+                    if(value)
+                        drilldownSeries[index].data.push(
+                            [level, value]
+                        );
+                    
+                };    
+            });
+        });
+        
+        componentOptions = {
+            
+            chart: {
+                type: 'column',
+                height: 350
+            },
+            title: {
+                text: 'Preço médio convertido por tipo de revenda e estado'
+            },
+            subtitle: {
+                //text: Samples '</ a>.'
+            },
+            xAxis: {
+                type: 'category'
+            },
+            yAxis: {
+                title: {
+                    text: 'Preço médio convertido em R$'
+                }
+        
+            },
+            legend: {
+                enabled: true
+            },
+            plotOptions: {
+                series: {
+                    borderWidth: 0,
+                    dataLabels: {
+                        enabled: true,
+                        format: 'R$ {point.y:.2f}'
+                    }
+                }
+            },
+        
+            tooltip: {
+                headerFormat: '< span style="font-size:11px">{series.name}</ span>< br>',
+                pointFormat: '< span style="color:{point.color}">{point.name}</ span>: < b>R$ {point.y:.2f}</ b> < br/>'
+            },
+        
+            series: series,
+            drilldown: {
+                series: drilldownSeries
+            }
+            
+        }
+        
+        $('#'+this.htmlObject).highcharts(
+            Highcharts.merge(highChartDefaultOptions,componentOptions)
+        );
+
+
+    } 
+
+            </pre>
+                </div>
+
+                <div class="col-md-12">
+                    <p>Chart render</p>
+
+                    <pre><div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div></pre>
+                </div>
+
+
+                <div class="col-md-12">
+                    <p>MDX Query</p>
+                    <h7>Sample MDX query using StellWheels</h7>
+                    <pre>  
+  WITH
+  SET [~COLUMNS] AS
+      {[Markets].[Territory].Members}
+  SET [~ROWS_Time_Time] AS
+      {[Time].[Months].Members}
+  SET [~ROWS_Order Status_Order Status] AS
+      Hierarchize({{[Order Status].[All Status Types]}, {[Order Status].[Type].Members}})
+  SELECT
+  NON EMPTY CrossJoin([~COLUMNS], {[Measures].[Sales]}) ON COLUMNS,
+  NON EMPTY NonEmptyCrossJoin([~ROWS_Time_Time], [~ROWS_Order Status_Order Status]) ON ROWS
+  FROM [SteelWheelsSales]
+            </pre>
+
+                    <p>
+                        <a href="../menu/mdx.html" class="btn btn-default">
+                            < Voltar</a>
+
+                </div>
+
+            </div>
+            <hr>
+            <p>
+
+        </div>
+        <!-- /container -->
+
+    </div>
+    <!-- /wrap -->
+
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="../..//js/Highcharts/code/highcharts.js"></script>
+    <script src="../..//js/Highcharts/code/modules/exporting.js"></script>
+    <script src="../..//js/Highcharts/code/modules/drilldown.js"></script>
+    <script src="two_column_chart.js"></script>
+</body>
+
+</html>

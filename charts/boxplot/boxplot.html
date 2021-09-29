@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="Bov BI - Desafios Práticos">
+    <meta name="author" content="Fernando Maia da Mota">
+    <link rel="shortcut icon" href="../img/favicon.ico" />
+
+    <title>Bov BI - Documentação</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../../css/desafios_praticos.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+    <div id="">
+        <div class="container">
+
+            <div class="header clearfix">
+                <h3 class="text-muted">Bov BI - Documentação</h3>
+            </div>
+
+
+            <div class="row">
+                <h2>Boxplot Chart</h2>
+
+                <div class="btn-group pull-right" role="group" aria-label="...">
+                    <button href="#function" type="button" class="btn btn-default" disabled="disabled">Dataset</button>
+                    <button type="button" class="btn btn-default" disabled="disabled">Function</button>
+                    <button type="button" class="btn btn-default" disabled="disabled">Chart</button>
+                    <button type="button" class="btn btn-default" disabled="disabled">MDX</button>
+                </div>
+
+                <div class="col-md-12">
+                    <p>Expected dataset</p>
+                    <pre>
+{
+    "metadata": [{
+        "colIndex": 0,
+        "colType": "String",
+        "colName": "Regiao"
+    }, {
+        "colIndex": 1,
+        "colType": "Numeric",
+        "colName": "Preco Minimo"
+    }, {
+        "colIndex": 2,
+        "colType": "Numeric",
+        "colName": "FirstQ"
+    }, {
+        "colIndex": 3,
+        "colType": "Numeric",
+        "colName": "ThirdQ"
+    }, {
+        "colIndex": 4,
+        "colType": "Numeric",
+        "colName": "Preco Maximo"
+    }, {
+        "colIndex": 5,
+        "colType": "Numeric",
+        "colName": "Avg"
+    }],
+    "resultset": [
+        ["APAC", 28106  , 98496  , 133535 , 158345 , 192811 ],
+        ["EMEA", 50024 , 70488 , 93171 , 118008 , 131294 ],
+        ["Japan", 53658 , 67605 , 94016 , 120563 , 150792 ],
+        ["NA", 38506 , 67507 , 82980 , 104562 , 111370 ]
+        ]
+
+};
+                    </pre>
+                </div>
+
+                <div class="col-md-12">
+                    <p>Function</p>
+                    <pre>
+function bar(chartOptions, result) {
+    var categories = [];
+    var soma = 0;
+    var media = 0;
+    data = [];
+
+    $.each(result.resultset, function( index, value ) {
+        soma += value[6];
+        categories.push(value[0]);
+        data.push(value.splice(1,6));
+    });
+
+    media = soma / result.resultset.length ;
+
+    componentHighChartOptions = {
+        chart: {
+            type: 'boxplot',       
+            height: 350
+        },
+        plotOptions: {
+            boxplot: {
+                lineColor: '#0862a3'
+            }
+        },
+        title: {
+            text: 'Comparative Sales by Territory'
+        },
+        legend: {
+            enabled: false
+        },
+        xAxis: {
+            categories: categories,
+            title: {
+                text: 'Territory'
+            }
+        },
+        tooltip: {
+                    formatter: function() {
+                        
+                        return 'Territory: &ltb>' +this.point.category+ '&lt/b> &ltbr>' + 
+                                'Minimum: &ltb>' +(this.point.high)+ '&lt/b> &ltbr>' +
+                                'Q1: &ltb>' +(this.point.q3)+ '&lt/b> &ltbr>'+
+                                'Median: &ltb>' +(this.point.median)+ '&lt/b> &ltbr>' +
+                                'Q2: &ltb>' +(this.point.q1)+ '&lt/b> &ltbr>'+
+                                'Maximum: &ltb>' +(this.point.low)+ '&lt/b> &ltbr>';
+                    }
+        },
+        yAxis: {
+            title: {
+                text: 'Sales in U$'
+            },
+            labels: {
+                // format: '{value:.2f}%',
+                formatter: function(){
+                    
+                    return (this.value)
+                } 
+            },
+            plotLines: [{
+                value: media,
+                color: 'rgba(249,0,0,0.4)',
+                zIndex: 5,
+                width: 1,
+                label: {
+                    text: 'Média Geral ' +(media),
+                    align: 'center',
+                    style: {
+                        color: 'gray'
+                    }
+                }
+            }]
+        },
+        series: [{
+            name: 'Sales',
+            data: data,
+                tooltip: {
+                    headerFormat: '< em>Regiões</ em>< br/>'
+            }
+        }]
+    }      
+    
+    // Create the chart
+    $('#'+this.htmlObject).highcharts(
+        Highcharts.merge(highChartDefaultOptions, componentHighChartOptions)
+    );
+                
+} 
+        </pre>
+                </div>
+
+                <div id="function" class="col-md-12">
+                    <p>Chart render</p>
+                    <pre><div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div></pre>
+                </div>
+
+                <div class="col-md-12">
+                    <p>MDX Query</p>
+                    <h7>Sample MDX query using StellWheels</h7>
+                    <pre>  
+ WITH
+
+  SET [~ROWS] AS 
+      {[Markets].[Territory].Members} 
+  SET [~UNIQUE_MEMBER] AS
+      {[Customers].[Customer].Members}
+
+  MEMBER Measures.Median AS MEDIAN([~UNIQUE_MEMBER], [Measures].[Sales])
+  MEMBER Measures.FirstQ AS FirstQ([~UNIQUE_MEMBER], [Measures].[Sales])
+  MEMBER Measures.ThirdQ AS ThirdQ([~UNIQUE_MEMBER], [Measures].[Sales])
+  MEMBER Measures.Avg AS AVG([~UNIQUE_MEMBER], [Measures].[Sales])
+  SELECT
+  NON EMPTY {
+      [Measures].[Sales]
+      , [Measures].[FirstQ]
+      , [Measures].[Median]
+      , [Measures].[ThirdQ] 
+      , [Measures].[Price]
+      , [Measures].[Avg]
+  } ON COLUMNS,
+  NON EMPTY [~ROWS] ON ROWS
+
+  FROM [SteelWheelsSales] 
+                    </pre>                    
+                </div>
+
+            </div>
+            <hr>
+            <p> <a href="../../menu/components.html" class="btn btn-default"> < Voltar</a> </p>
+        </div>
+        <!-- /container -->
+
+    </div>
+    <!-- /wrap -->
+
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="../..//js/Highcharts/code/highcharts.js"></script>
+    <script src="../..//js/Highcharts/code/highcharts-more.js"></script>
+    <script src="../..//js/Highcharts/code/modules/exporting.js"></script>
+    <script src="boxplot.js"></script>
+</body>
+
+</html>

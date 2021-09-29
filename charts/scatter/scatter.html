@@ -1,0 +1,246 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="Bov BI - Desafios Práticos">
+    <meta name="author" content="Fernando Maia da Mota">
+    <link rel="shortcut icon" href="../img/favicon.ico"/>
+
+    <title>Bov BI - Documentação</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../../css/desafios_praticos.css" rel="stylesheet">
+
+    
+  </head>
+
+  <body>
+    <div id="">
+      <div class="container">
+
+        <div class="header clearfix">
+          <h3 class="text-muted">Bov BI - Documentação</h3>
+        </div>
+
+        <div class="row">
+          <h2>Scatter Chart</h2>
+
+          <div class="col-md-12">
+            <p>Expected dataset</p>
+            <pre>
+{
+    "metadata": [{
+        "colIndex": 0,
+        "colType": "String",
+        "colName": "Territory"
+    }, {
+        "colIndex": 1,
+        "colType": "Numeric",
+        "colName": "Sales"
+    }, {
+        "colIndex": 2,
+        "colType": "Numeric",
+        "colName": "Quantity"
+    }, {
+        "colIndex": 3,
+        "colType": "Numeric",
+        "colName": "Median"
+    }],
+    "resultset": [
+        ["APAC", 878    ],
+        ["EMEA", 578    ],
+        ["Japan", 293    ],
+        ["NA", 795  ]
+        ]
+
+}            
+            </pre>
+          </div>
+
+          <div class="col-md-12">
+            <p>Function</p>
+            <pre>
+        
+function bar(chartOptions, result) {
+    var series = [];
+    var categories = [];
+    var media = 0 ;
+    var soma = 0 ;
+
+    $.each(result.resultset, function(index, value){
+        soma += value[1] ;
+    });
+
+    media = Highcharts.numberFormat( soma / result.resultset.length );
+
+    var seriePrecoMedio = {
+        name: "Preço médio convertido",
+        colorByPoint :  true,
+        data: []
+    };
+
+    $.each(result.resultset, function(index, value){
+        categories.push(value[0]);
+        seriePrecoMedio.data.push({
+            x: index,
+            category: value[0],
+            valor: value[1],
+            valorFormatted: (value[1]),
+            indice: Highcharts.numberFormat((100 * value[1]) / media) ,
+            indiceFormatted: Highcharts.numberFormat( ( value[1] / media) - 1 ) ,
+            y: value[1]
+        })
+        
+    })
+    series.push(seriePrecoMedio);
+
+    componentHighChartOptions = {
+        chart: {
+            type: 'scatter',
+            height: 384,
+            zoomType: 'xy'
+        },
+        title: {
+            text: 'Comparative Sales'
+        },
+        legend: {
+                enabled: false,
+            layout: 'vertical',
+            align: 'left',
+            verticalAlign: 'top',
+            x: 100,
+            y: 70,
+            floating: true,
+            backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF',
+            borderWidth: 1
+        },
+        plotOptions: {
+            scatter: {
+                marker: {
+                    radius: 5,
+                    states: {
+                        hover: {
+                            enabled: true,
+                            lineColor: 'rgb(100,100,100)'
+                        }
+                    }
+                },
+                states: {
+                    hover: {
+                        marker: {
+                            enabled: false
+                        }
+                    }
+                },
+    
+                tooltip: {
+                headerFormat: '&ltb>&lt/b>',
+                pointFormat: 
+                    '&ltb>{point.category}&lt/b>&ltbr/>'+
+                    '{series.name}: {point.valorFormatted}&ltbr/>'+
+                    'Diferencial do valor médio: {point.indiceFormatted}&ltbr/>'
+                }
+            }
+        },
+        yAxis: {
+            labels: {
+                formatter: function(){
+                    return (this.value)
+                } 
+            },
+            title: {
+                text: 'Preço convertido'
+            },
+            plotLines: [{
+                label: {
+                    text: 'Valor médio: '+(media),
+                    align: 'right',
+                    x: -10,
+                    y: 15,
+                    zIndex: 1000000000
+            },
+            align: 'right', // Positioning of the label. 
+            color: 'red', // Color value
+            dashStyle: 'longdashdot', // Style of the plot line. Default to solid
+            //( (100 * 23.45) / 23.45 )
+            value: media, // Value of where the line will appear
+            width: 2 // Width of the line    
+            }]
+        },
+        xAxis: {
+                title: {
+                enabled: true,
+                text: 'Regiões'
+            },
+            startOnTick: true,
+            endOnTick: true,
+            showLastLabel: true,
+            categories: categories
+        },
+        series: series
+    }   
+    
+    // Create the chart
+    $('#'+this.htmlObject).highcharts(
+        Highcharts.merge(highChartDefaultOptions, componentHighChartOptions)
+    );
+                
+} 
+            </pre>
+          </div>
+          
+          <div class="col-md-12">
+            <p>Chart render</p>
+          
+            <pre><div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div></pre>
+          </div>
+
+            <div class="col-md-12">
+            <p>MDX Query</p>
+            <h7>Sample MDX query using StellWheels</h7>
+                <pre>  
+WITH
+
+SET [~ROWS] AS 
+    {[Markets].[Territory].Members}
+     
+SELECT
+NON EMPTY {[Measures].[Sales] ,  [Measures].[Quantity]  } ON COLUMNS,
+NON EMPTY [~ROWS] ON ROWS
+
+FROM [SteelWheelsSales] 
+  
+                </pre>                    
+            </div>
+          
+        </div>
+        <hr>
+      <p><a href="../../menu/components.html" class="btn btn-default">< Voltar</a>        
+      </div>
+    <!-- /container -->
+
+    </div>
+    <!-- /wrap -->
+
+
+    <script
+  src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>  
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="../..//js/Highcharts/code/highcharts.js"></script>
+    <script src="../..//js/Highcharts/code/highcharts-more.js"></script>
+    <script src="../..//js/Highcharts/code/modules/exporting.js"></script>
+    <script src="scatter.js"></script>
+  </body>
+</html>
